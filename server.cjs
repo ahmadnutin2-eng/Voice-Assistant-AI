@@ -13,10 +13,6 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
@@ -26,7 +22,6 @@ var import_config = require("dotenv/config");
 var import_express = __toESM(require("express"), 1);
 var import_path = __toESM(require("path"), 1);
 var import_fs = __toESM(require("fs"), 1);
-var import_vite = require("vite");
 var import_genai = require("@google/genai");
 var import_ws = require("ws");
 var import_http = __toESM(require("http"), 1);
@@ -134,20 +129,31 @@ async function startServer() {
   app.get("*/api/health", (req, res) => {
     res.json({ status: "ok" });
   });
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await (0, import_vite.createServer)({
-      server: { middlewareMode: true },
-      appType: "spa"
-    });
-    app.use(vite.middlewares);
-  } else {
-    const possibleDistPath = import_path.default.join(process.cwd(), "dist");
-    const distPath = import_fs.default.existsSync(possibleDistPath) ? possibleDistPath : process.cwd();
-    app.use(import_express.default.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(import_path.default.join(distPath, "index.html"));
-    });
+  
+  // Always serve static assets for Ionos/Render production deployment
+  const possibleDistPath = import_path.default.join(process.cwd(), "dist");
+  let distPath = process.cwd();
+  if (import_fs.default.existsSync(possibleDistPath)) {
+    distPath = possibleDistPath;
+  } else if (import_fs.default.existsSync(import_path.default.join(__dirname, "index.html"))) {
+    distPath = __dirname;
   }
+  console.log(`Production Mode (Ionos/Render): Serving static assets from ${distPath}`);
+  app.use(import_express.default.static(distPath));
+  const physicalAssetsPath = import_path.default.join(__dirname, "assets");
+  const physicalImagesPath = import_path.default.join(__dirname, "images");
+  if (import_fs.default.existsSync(physicalAssetsPath)) {
+    console.log(`Mounting explicit assets directory from: ${physicalAssetsPath}`);
+    app.use("/assets", import_express.default.static(physicalAssetsPath));
+  }
+  if (import_fs.default.existsSync(physicalImagesPath)) {
+    console.log(`Mounting explicit images directory from: ${physicalImagesPath}`);
+    app.use("/images", import_express.default.static(physicalImagesPath));
+  }
+  app.get("*", (req, res) => {
+    res.sendFile(import_path.default.join(distPath, "index.html"));
+  });
+  
   server.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}`);
   });
