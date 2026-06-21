@@ -5,6 +5,7 @@
   "main": "server.cjs",
   "type": "commonjs",
   "scripts": {
+    "build": "echo 'Bypassing build step since the files are already compiled in AI Studio'",
     "start": "node server.cjs"
   },
   "dependencies": {
