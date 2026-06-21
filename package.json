@@ -1,0 +1,16 @@
+{
+  "name": "ecommerce-voice-helper",
+  "version": "1.0.0",
+  "private": true,
+  "main": "server.cjs",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.cjs"
+  },
+  "dependencies": {
+    "@google/genai": "^2.4.0",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "ws": "^8.21.0"
+  }
+}
